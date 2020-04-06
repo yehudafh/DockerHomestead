@@ -1,0 +1,109 @@
+version: '3.7'
+services:
+  # frontend:
+  #   image: node:13.12.0
+  #   command: bash -c "[ ! -d node_modules ] && npm install; npm run dev"
+  #   working_dir: /app
+  #   depends_on: 
+  #     - backend
+  #   volumes:
+  #     - ./client:/app
+  #   networks:
+  #     dev:
+  #       ipv4_address: 10.10.10.10
+
+  # search:
+  #   image: elasticsearch:7.6.1
+  #   environment: 
+  #     - discovery.type=single-node
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   networks:
+  #     dev:
+  #       ipv4_address: 10.10.10.11
+  #   volumes: 
+  #     - search_data:/usr/share/elasticsearch/data
+
+  redis:
+    image: redis:5
+    networks:
+      dev:
+        ipv4_address: 10.10.10.12
+
+  mysql:
+    image: percona:5.7
+    ports:
+      - 3306:3306
+    environment: 
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=homestead
+      - MYSQL_USER=homestead
+      - MYSQL_PASSWORD=secret
+      # - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      # GRANT ALL PRIVILEGES ON *.* TO 'homestead'@'%' WITH GRANT OPTION;
+      
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      dev:
+        ipv4_address: 10.10.10.13
+
+  backend:
+    build:
+      dockerfile: backend.Dockerfile
+      context: .
+    ports:
+      - 80:80
+    depends_on: 
+      - mysql
+      # - search
+      - redis
+    networks:
+      dev:
+        ipv4_address: 10.10.10.14
+    volumes:
+      - ./code:/code
+    working_dir: /code
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=homestead
+      - PMA_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=secret
+
+    networks:
+      dev:
+        ipv4_address: 10.10.10.15
+  
+  # proxy:
+  #   image: nginx:1.17
+  #   ports:
+  #     - 80:80
+  #     - 9200:9200
+  #   volumes:
+  #     - ./configs/nginx/proxy.conf:/etc/nginx/conf.d/proxy.conf
+  #   depends_on: 
+  #     # - frontend
+  #     - backend
+  #     # - search
+  #     - phpmyadmin
+  #   networks:
+  #     dev:
+  #       ipv4_address: 10.10.10.16
+
+
+networks:
+  dev:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+
+volumes:
+    # search_data:
+    db_data:
