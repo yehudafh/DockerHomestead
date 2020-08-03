@@ -1,5 +1,18 @@
 version: '3.7'
 services:
+  search:
+    image: elasticsearch:7.6.1
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      develop:
+        ipv4_address: 10.10.10.11
+    volumes:
+      - search_data:/usr/share/elasticsearch/data
+
   redis:
     image: redis:5
     networks:
@@ -10,7 +23,7 @@ services:
     image: percona:5.7
     ports:
       - 3306:3306
-    environment: 
+    environment:
       - MYSQL_ROOT_HOST=%
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=homestead
@@ -18,7 +31,7 @@ services:
       - MYSQL_PASSWORD=secret
       # - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       # GRANT ALL PRIVILEGES ON *.* TO 'homestead'@'%' WITH GRANT OPTION;
-      
+
     volumes:
       - db_data:/var/lib/mysql
       - ./code:/code
@@ -32,7 +45,7 @@ services:
       context: .
     ports:
       - 80:80
-    depends_on: 
+    depends_on:
       - mysql
       # - search
       - redis
@@ -56,6 +69,20 @@ services:
       develop:
         ipv4_address: 10.10.10.15
 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - search
+    environment:
+      # ELASTICSEARCH_URL: search:9200
+      ELASTICSEARCH_HOSTS: http://search:9200
+    networks:
+      develop:
+        ipv4_address: 10.10.10.16
+
 networks:
   develop:
     driver: bridge
@@ -65,5 +92,5 @@ networks:
         - subnet: 10.10.10.0/24
 
 volumes:
-    # search_data:
+    search_data:
     db_data:
