@@ -54,6 +54,7 @@ services:
         ipv4_address: 10.10.10.14
     volumes:
       - ./code:/code
+      # - ./configs/nginx/code.conf:/etc/nginx/sites-enabled/code.conf
     working_dir: /code
 
   phpmyadmin:
