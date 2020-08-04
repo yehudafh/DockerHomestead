@@ -2,6 +2,7 @@ version: '3.7'
 services:
   search:
     image: elasticsearch:7.6.1
+    container_name: search
     ports:
       - 9200:9200
     environment:
@@ -15,12 +16,14 @@ services:
 
   redis:
     image: redis:5
+    container_name: redis
     networks:
       develop:
         ipv4_address: 10.10.10.12
 
   mysql:
     image: percona:5.7
+    container_name: mysql
     ports:
       - 3306:3306
     environment:
@@ -40,9 +43,11 @@ services:
         ipv4_address: 10.10.10.13
 
   backend:
+    user: app
     build:
       dockerfile: backend.Dockerfile
       context: .
+    container_name: backend
     ports:
       - 80:80
     depends_on:
@@ -59,6 +64,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5
+    container_name: phpmyadmin
     ports:
       - 8080:80
     environment:
